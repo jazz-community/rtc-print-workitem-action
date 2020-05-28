@@ -8,6 +8,7 @@ const core = require('@actions/core');
 module.exports = (env) => {
 	const timestamp = moment().format('[_]YYYYMMDD[-]HHmm');
 	const version = (typeof env !== 'undefined' && (packageJson.version + '_' + env.buildUUID)) || packageJson.version + timestamp;
+	const projectId = 'com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction';
 	const config = {
 		entry: {
 			app: './index.js'
@@ -19,7 +20,7 @@ module.exports = (env) => {
 			new DisableOutputWebpackPlugin(),
 			new JazzUpdateSitePlugin({
 				appType: 'ccm',
-				projectId: 'com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction',
+				projectId: projectId,
 				acceptGlobPattern: [
 					'resources/**',
 					'META-INF/**',
