@@ -6,13 +6,13 @@ The "Printable Workitem Widget" is a powerful widget which allows you to customi
 
 By using the "Printable Workitem Button" you can print a workitem and load the right configuration just with one button.
 
-![image](documentation/images/printable-workitem-button-button.PNG)
+![image](documentation/images/printable-workitem-button-button.png)
 
 The "Printable Workitem Button" uses the same "Drawing-Engine" as the "Printable Workitem Widget" allowing to use the same configuration files you've already used for the Widget.
 
 All the configurations need to be set as a **"Process Attachment "** in order for the button to find and use them.
 
-![image](documentation/images/printable-workitem-button-preview.PNG)
+![image](documentation/images/printable-workitem-button-preview.png)
 
 ## Configuration
 
