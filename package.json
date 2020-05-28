@@ -4,6 +4,7 @@
 	"description": "Print Work Item with the Local Client",
 	"main": "./resources/ui/PrintWorkItem.js",
 	"devDependencies": {
+		"@actions/core": "^1.2.4",
 		"disable-output-webpack-plugin": "^1.0.1",
 		"jazz-update-site-webpack-plugin": "^0.4.1",
 		"moment": "^2.22.2",
