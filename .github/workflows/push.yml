@@ -19,5 +19,5 @@ jobs:
       - name: Upload build result
         uses: actions/upload-artifact@v1
         with:
-          name: rtc-print-workitem-button-${{ github.sha }}
+          name: rtc-print-workitem-action-${{ github.sha }}
           path: ${{ steps.npm_build.outputs.output_file }}
