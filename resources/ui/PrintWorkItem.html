@@ -1,0 +1,25 @@
+<div class="printWorkItemModal" style="display: none;">
+	<div class="printWorkItemModal-content"><span class="printWorkItemClose">&times;</span>
+		<h1 class="modal-title">Print Preview</h1>
+		<hr>
+		<div class="modal-body">
+			<table style="width:60%"></table>
+		</div>
+		<hr>
+		<div class="modal-footer">
+			<button class="secondary-button">Close</button>
+
+			<span>Config Print Size: </span>
+
+			<select class="print-wi-dropdown">
+				<option value="" default>Default</option>
+				<option value='{"width":"185mm"}'>Optimized - A4 Portrait</option>
+				<option value='{"width":"290mm"}'>Optimized - A4 Landscape</option>
+				<option value='{"width":"290mm"}'>Optimized - A3 Portrait</option>
+				<option value='{"width":"395mm"}'>Optimized - A3 Landscape</option>
+			</select>
+
+			<button class="primary-button" style="float: right;">Print</button>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<extension
+	      point="net.jazz.ajax.webBundles">
+	</extension>
+	<extension
+	      point="com.ibm.team.workitem.web.editorToolbarAction">
+	      <action
+             action="com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction.ui.PrintWorkItem"
+             iconContext="com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction"
+             iconDisabledUri="images/icons/print-icon.png"
+             iconUri="images/icons/print-icon.png"
+             id="com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction"
+             isMenuAction="true"
+             label="Print Work Item"
+             parameter='{ "toAttributes": [{ "attributeId": "com.siemens.bt.attribute.createdonbehalfof" }]}'>
+	      </action>
+	</extension>
+
+	<extension point="net.jazz.ajax.cssBindingSets">
+		<cssBindingSet id="com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction" path="">
+        	<cssBinding jsModule="com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction.ui.PrintWorkItem">
+                <cssModule path="/ui/PrintWorkItem.css"/>
+            </cssBinding>
+        </cssBindingSet>
+    </extension>
+</plugin>
