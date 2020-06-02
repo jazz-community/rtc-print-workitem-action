@@ -35,6 +35,8 @@ define([
 
 			_requestResponse: null,
 
+			_changeDropDownEvent: null,
+
 			/**
 			 * @requires PrintableWorkItemDraw
 			 * @override PrintableWorkItemDraw.webURL
@@ -44,6 +46,8 @@ define([
 
 			// Call the inherited constructor
 			constructor: function (params) {
+
+				this._changeDropDownEvent = this.changeResolutionDropDownEvent.bind(this);
 
 				// Try to get the configuration from the parameter in the action specification
 
@@ -62,7 +66,7 @@ define([
 						this.configuration = json.parse(params.actionSpec.parameter);
 					}
 				} catch (error) {
-					console.log("PrintWorkItem Error getting the configuration from the action specification. Message: " + error);
+					console.warn("PrintWorkItem Error getting the configuration from the action specification. Message: " + error);
 
 					// Reset the configuration if parsing fails
 					this.configuration = null;
@@ -353,7 +357,8 @@ define([
 				);
 
 				// Check if Modal already exists
-				if (document.body.querySelector(":scope > .printWorkItemModal") !== null) {
+				//if (document.body.querySelector(":scope > .printWorkItemModal") !== null) {
+				if (this.getModalElement() !== null) {
 					return;
 				}
 
@@ -362,26 +367,18 @@ define([
 				var templateHolder = document.createElement("div");
 				templateHolder.innerHTML = template;
 
+				// Add "id" to difference the Modals
+				templateHolder.querySelector(".printWorkItemModal").setAttribute("wi", this.workingCopy.idLabel);
+
 				// Close span of the Modal
 				templateHolder.querySelector(".printWorkItemClose").addEventListener("click", function (evt) {
-					_this.closeModal();
-				});
+					this.closeModal();
+				}.bind(this));
 
 				// Close button
 				templateHolder.querySelector(".secondary-button").addEventListener("click", function (evt) {
-					_this.closeModal();
-				});
-
-				// Change the dropdown
-				templateHolder.querySelector(".print-wi-dropdown").addEventListener("change", function (evt) {
-					try {
-						_this._printableWorkItemPrintConfig = JSON.parse(evt.target.value);
-					} catch (exception) {
-						_this._printableWorkItemPrintConfig = null;
-					}
-					_this.drawConfiguration();
-				});
-
+					this.closeModal();
+				}.bind(this));
 
 				// Print button
 				templateHolder.querySelector(".primary-button").addEventListener("click", function (evt) {
@@ -397,11 +394,11 @@ define([
 
 						printWindow.document.close();
 
-						var copyNode = document.body.querySelector(":scope > .printWorkItemModal > .printWorkItemModal-content > .modal-body").children[0].cloneNode(true);
+						var copyNode = this.getModalElement().querySelector(":scope > .printWorkItemModal-content > .modal-body").children[0].cloneNode(true);
 
 						if (copyNode == null) {
 							console.warn("Can't find any Node to be copied");
-							_this.closeModal();
+							this.closeModal();
 							return;
 						}
 
@@ -425,26 +422,40 @@ define([
 						window.alert("Error occurred while trying to print");
 					}
 
-				});
+				}.bind(this));
 
 				document.body.appendChild(templateHolder.firstChild);
 
 			},
 
 			closeModal: function () {
-				document.body.querySelector(":scope > .printWorkItemModal").style.display = "none";
+				this.getModalElement().style.display = "none";
 				this.clearModalContent();
+				this.getModalElement().querySelector(".print-wi-dropdown").removeEventListener("change", this._changeDropDownEvent);
 			},
 
 			clearModalContent: function () {
 				this.getHolderElement().innerHTML = "";
 			},
 
+			changeResolutionDropDownEvent: function (evt) {
+				try {
+					this._printableWorkItemPrintConfig = JSON.parse(evt.target.value);
+				} catch (exception) {
+					this._printableWorkItemPrintConfig = null;
+				}
+				this.drawConfiguration();
+			},
+
+			getModalElement: function () {
+				return document.body.querySelector(":scope > .printWorkItemModal[wi='" + this.workingCopy.idLabel + "']");
+			},
+
 			/**
 			 * @override PrintableWorkItemDraw.getHolderElement
 			 */
 			getHolderElement: function () {
-				return document.body.querySelector(":scope > .printWorkItemModal > .printWorkItemModal-content > .modal-body");
+				return this.getModalElement().querySelector(":scope > .printWorkItemModal-content > .modal-body");
 			},
 
 			/**
@@ -471,6 +482,7 @@ define([
 			// Called when the enabled button was clicked
 			run: function (params) {
 				this.drawConfiguration();
+				this.getModalElement().querySelector(".print-wi-dropdown").addEventListener("change", this._changeDropDownEvent);
 				return;
 			},
 
@@ -486,7 +498,7 @@ define([
 					return;
 				}
 
-				var modalElement = document.body.querySelector(".printWorkItemModal");
+				var modalElement = this.getModalElement();
 
 				if (modalElement == null) {
 					console.warn("Can't find the modal");
@@ -495,6 +507,8 @@ define([
 				}
 
 				this.clearModalContent();
+
+				this.getModalElement().querySelector(".print-wi-dropdown").value = (this._printableWorkItemPrintConfig ? JSON.stringify(this._printableWorkItemPrintConfig) : "");
 
 				if (this._requestResponse.successful) {
 
