@@ -122,6 +122,39 @@ table.workitemTable.border {
 	text-overflow: ellipsis;
 }
 
+.pointer {
+	cursor: pointer;
+}
+
+.no-event {
+	pointer-events: none;
+}
+
+.rotate-z-0 {
+	transform: rotateZ(0deg);
+}
+
+.rotate-z-90 {
+	transform: rotateZ(90deg);
+}
+
+div.printWorkItemModal .blink {
+	animation: blink-animation 1.5s steps(5, start) infinite;
+	-webkit-animation: blink-animation 1.5s steps(5, start) infinite;
+}
+
+@keyframes blink-animation {
+	to {
+		background-color: var(--blink-color);
+	}
+}
+
+@-webkit-keyframes blink-animation {
+	to {
+		background-color: var(--blink-color);
+	}
+}
+
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
