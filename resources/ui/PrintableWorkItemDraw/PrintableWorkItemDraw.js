@@ -1,16 +1,11 @@
 define(["dojo/_base/declare"], function (declare) {
 	return declare(null, {
 		parentWidget: null,
-		// Public Value which contents the width of the current configuration
 		activeConfigurationWidth: 5,
-		// Map with all the keys and values for the translator
 		keyValueMap: [],
-		predefinedAttributes: null,
-		// All Tasks which need to be run, before everything is done
+		predefinedAttributes: [],
 		taskScheduler: [],
-		// Pixels per Table-Row-Height
 		pixelPerRow: 15,
-		// Dynamic-Height ID-List
 		dynamicHeightList: [],
 		ignoreDynamicValues: false,
 		globalChildrenLoaded: 0,
@@ -18,45 +13,10 @@ define(["dojo/_base/declare"], function (declare) {
 		globalChildCheckingDone: false,
 		dynamicVariableCounter: [],
 		_pageSizeOptimize: null,
-
-		/**
-		 * @static final
-		 * 
-		 * All the HTML-Tags, which are allowed by the System
-		 * to get displayed
-		 */
 		GLOBAL_HTML_ALLOWED_TAGS: "<b><i><u><p><br><a><s><div><span><hr><synthetic><ul><li><ol><svg><g><path>",
 		constructor: function constructor(parentWidget) {
 			this.parentWidget = parentWidget;
 		},
-
-		/**
-		 * Create and Draw the table based on the configuration
-		 * 
-		 * @param {String} workitemID The ID of the Workitem which should be used
-		 * @param {JSON} configuration Configuration to be used
-		 * 
-		 * @param {Boolean} updateTitle Should the _updateTitle be called in the parent 
-		 * @default false
-		 * 
-		 * @param {Boolean} skipWebKeysIfNotEmpty Skip reloading keys, if they already loaded
-		 * @default false
-		 * 
-		 * @param {Boolean} allowDeepChild Should the children keys, be loaded in detail with a new request
-		 * @default false
-		 * 
-		 * @param {JSON} _pageSizeOptimize The config which should get applied to the table, for the width and height
-		 * @default null
-		 * 
-		 * @param {JSON} _predefinedAttributes A List with Attributes which should get overwritten
-		 * @default null
-		 * @example [{key: "key", value: "value"}]
-		 * 
-		 * @param {Boolean} _ignoreDynamicValues Should dynamic values not be displayed
-		 * @default false
-		 * 
-		 * @returns {Element} Table based on the configuration
-		 */
 		drawTableFromConfiguration: function drawTableFromConfiguration(workitemID, configuration) {
 			var _this = this;
 
@@ -70,7 +30,6 @@ define(["dojo/_base/declare"], function (declare) {
 
 			var _ignoreDynamicValues = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : false;
 
-			// Clear remaining Tasks
 			this.taskScheduler = [];
 			this._pageSizeOptimize = _pageSizeOptimize;
 			this.dynamicVariableCounter = [];
@@ -78,7 +37,7 @@ define(["dojo/_base/declare"], function (declare) {
 			this.globalChildrenLoaded = 0;
 			this.globalChildrenToBeLoaded = 0;
 			this.globalChildCheckingDone = false;
-			this.predefinedAttributes = _predefinedAttributes;
+			this.predefinedAttributes = !_predefinedAttributes ? [] : _predefinedAttributes;
 
 			if (!skipWebKeysIfNotEmpty || skipWebKeysIfNotEmpty && this.keyValueMap.length === 0) {
 				this._getDataFromJazz(workitemID, updateTitle, configuration, allowDeepChild, function (mainContainer) {
@@ -94,10 +53,6 @@ define(["dojo/_base/declare"], function (declare) {
 				this._allDataCollectedFromJazz(updateTitle, configuration);
 			}
 		},
-
-		/**
-		 * Run all the Task which where scheduled
-		 */
 		_runScheduledTasks: function _runScheduledTasks() {
 			if (this.taskScheduler.length != 0) {
 				for (var i = 0; i < this.taskScheduler.length; i++) {
@@ -107,13 +62,6 @@ define(["dojo/_base/declare"], function (declare) {
 				this.taskScheduler = [];
 			}
 		},
-
-		/**
-		 * Run tasks after everything was loaded from Jazz
-		 * 
-		 * @param {Boolean} updateTitle Should the _updateTitle function be called in the parent
-		 * @param {JSON} configuration The configuration which should get applied
-		 */
 		_allDataCollectedFromJazz: function _allDataCollectedFromJazz(updateTitle, configuration) {
 			this.dynamicHeightList = [];
 
@@ -129,16 +77,6 @@ define(["dojo/_base/declare"], function (declare) {
 				}
 			}
 		},
-
-		/**
-		 * Call when an child was found in order to determent if everything was loaded, that needs to be loaded
-		 * 
-		 * @param {Boolean} updateTitle Should the _updateTitle function be called in the parent if successful
-		 * @param {JSON} configuration The configuration which should get used if successful
-		 * 
-		 * @param {Boolean} increment Should the value of found children get incremented
-		 * @default true
-		 */
 		_childWasLoaded: function _childWasLoaded(updateTitle, configuration) {
 			var increment = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
@@ -150,25 +88,11 @@ define(["dojo/_base/declare"], function (declare) {
 				this._allDataCollectedFromJazz(updateTitle, configuration);
 			}
 		},
-
-		/**
-		 * Load all the Data from the Jazz Server from a given Workitem
-		 * 
-		 * @param {String} workitemID The ID of the Workitem which should get loaded
-		 * @param {Boolean} updateTitle Should the _updateTitle function be called in the parent
-		 * @param {JSON} configuration The configuration which should get used
-		 * @param {Boolean} allowDeepChild Should load detailed information form Children. Will increase amount of requests.
-		 * @param {Function} _callback Will be called after everting finished
-		 * 
-		 * @param {Number} currentChildID The count of the current child. Only required if allowDeepChild is active
-		 * @default null
-		 */
 		_getDataFromJazz: function _getDataFromJazz(workitemID, updateTitle, configuration, allowDeepChild, _callback) {
 			var _this2 = this;
 
 			var currentChildID = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
 			var childEndpointID = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : null;
-			// Make a request to get the Values from Jazz
 			jazz.client.xhrGet({
 				url: "".concat(this.parentWidget.webURL, "/service/com.ibm.team.workitem.common.internal.rest.IWorkItemRestService/workItemDTO2?includeHistory=false&id=").concat(workitemID),
 				error: function error() {
@@ -179,25 +103,12 @@ define(["dojo/_base/declare"], function (declare) {
 				if (rootResult == null || rootResult == undefined) {
 					_callback(_this2);
 				} else {
-					// Process all the Data which where returned from Jazz
 					_this2._processDataFromJazz(_this2, rootResult, allowDeepChild, currentChildID, updateTitle, configuration, childEndpointID);
 
 					_callback(_this2);
 				}
 			}.bind(this));
 		},
-
-		/**
-		 * Process the Data which was loaded from the Jazz server
-		 * 
-		 * @param {*} mainContainer The main container which is used
-		 * @param {String} rootResult The result which should get processed as String in the XML content
-		 * @param {Boolean} allowDeepChild Should detailed information of the children be used
-		 * @param {Number} currentChildID The reference ID from the children which currently get used
-		 * @param {Boolean} updateTitle Should the _updateTitle from the parent be called
-		 * @param {JSON} configuration The configuration which should get used
-		 * @param {String} childEndpointID
-		 */
 		_processDataFromJazz: function _processDataFromJazz(mainContainer, rootResult, allowDeepChild, currentChildID, updateTitle, configuration, childEndpointID) {
 			var _this3 = this;
 
@@ -206,26 +117,21 @@ define(["dojo/_base/declare"], function (declare) {
 				this.dynamicVariableCounter = [];
 			}
 
-			var _xmlContent = null; // For IE
+			var _xmlContent = null;
 
 			if (window.ActiveXObject) {
 				var oXML = new ActiveXObject("Microsoft.XMLDOM");
 				oXML.loadXML(rootResult);
 				_xmlContent = oXML;
 			} else {
-				// Modern Browser
 				_xmlContent = new DOMParser().parseFromString(rootResult, "text/xml");
-			} // Map all Values from the Workitem level
-
+			}
 
 			_xmlContent.querySelectorAll("value > attributes").forEach(function (queryElement) {
 				mainContainer.keyValueMap.push(["".concat(childEndpointID != null && currentChildID != null ? "".concat(childEndpointID, ":").concat(currentChildID, ":") : "").concat(queryElement.querySelector("key").textContent), queryElement.querySelector("value")]);
-			}); // Map all parent Values
-			// Only one parent will be used, because multiple parents isn't permitted
+			});
 
-
-			var _queryResult = _xmlContent.querySelectorAll("value > linkTypes > endpointId"); //let childCounter = 0;
-
+			var _queryResult = _xmlContent.querySelectorAll("value > linkTypes > endpointId");
 
 			var _loop = function _loop(i) {
 				var _queryElement = _queryResult[i];
@@ -244,7 +150,7 @@ define(["dojo/_base/declare"], function (declare) {
 						var fakeType = false;
 
 						if (queryList.length == 0) {
-							fakeType = true; // Check if Children for HTMLCollection is supported (Not supported in IE)
+							fakeType = true;
 
 							if (queryChildElement.children == undefined || queryChildElement.children == null) {
 								var n = 0,
@@ -269,11 +175,6 @@ define(["dojo/_base/declare"], function (declare) {
 							queryList.push(fakeID);
 							queryList.length = queryList.length == undefined ? queryList.children.length : queryList.length;
 						}
-						/*****************************************************************/
-						// Add the attribute "_url" to all the children, which were found
-
-						/*****************************************************************/
-
 
 						var fakeURL = queryChildElement.querySelector(":scope > url");
 
@@ -287,8 +188,6 @@ define(["dojo/_base/declare"], function (declare) {
 							fakeURLHolder.appendChild(fakeURLValue);
 							mainContainer.keyValueMap.push(["".concat(_queryElement.textContent, ":").concat(mainContainer._globalDynamicCounterGetValueContent(_queryElement.textContent), ":_url"), fakeURLValue]);
 						}
-						/*****************************************************************/
-
 
 						if (!allowDeepChild || !hasEndpointID || _queryElement.textContent == "textuallyReferenced") {
 							mainContainer._readAttributeValuesWithNoDeepValue(_queryElement, queryList, allowDeepChild, updateTitle, configuration, fakeType);
@@ -311,8 +210,7 @@ define(["dojo/_base/declare"], function (declare) {
 
 											break;
 										}
-									} // Create a new request for the Child-Object
-
+									}
 
 									mainContainer._getDataFromJazz(fakeType ? fakeElementID : element.querySelector("value > id").textContent, updateTitle, configuration, allowDeepChild, function (_requestMainContainer) {
 										_requestMainContainer._childWasLoaded(updateTitle, configuration);
@@ -328,34 +226,29 @@ define(["dojo/_base/declare"], function (declare) {
 
 					if (mainContainer._globalDynamicCounterGetValueContent(_queryElement.textContent) !== 0) {
 						mainContainer.globalChildrenToBeLoaded += mainContainer._globalDynamicCounterGetValueContent(_queryElement.textContent);
-						/** Add new Entry for the count of the found types */
-
 						var value = document.createElement("value");
 						var label = document.createElement("label");
 						label.innerText = mainContainer._globalDynamicCounterGetValueContent(_queryElement.textContent);
 						value.appendChild(label);
 						mainContainer.keyValueMap.push([_queryElement.textContent, value]);
-						/******************************************************/
 					}
 				}
 			};
 
 			for (var i = 0; i < _queryResult.length; i++) {
 				_loop(i);
-			} //apply all the Custom Attributes
-
-
-			if (this.predefinedAttributes != null) {
-				this.predefinedAttributes.forEach(function (element) {
-					var value = document.createElement("value");
-					var label = document.createElement("label");
-					label.innerText = element.value;
-					value.appendChild(label);
-
-					_this3.keyValueMap.push([element.key, value]);
-				});
 			}
 
+			this._applyCustomCurrentAttributeToPredefined();
+
+			this.predefinedAttributes.forEach(function (element) {
+				var value = document.createElement("value");
+				var label = document.createElement("label");
+				label.innerText = element.value;
+				value.appendChild(label);
+
+				_this3.keyValueMap.push([element.key, value]);
+			});
 			this.globalChildCheckingDone = true;
 
 			if (allowDeepChild && currentChildID == null && mainContainer.globalChildrenToBeLoaded === 0) {
@@ -366,19 +259,48 @@ define(["dojo/_base/declare"], function (declare) {
 				}
 			}
 		},
-
-		/**
-		 * Read the content of all the Attributes without a second request for details
-		 * 
-		 * @param {Object} _queryElement The current Element
-		 * @param {XML[]} queryList List with all the found Attributes
-		 * @param {Boolean} allowDeepChild Should detailed values be read
-		 * @param {Boolean} updateTitle Should the updateTitle function be called
-		 * @param {JSON} configuration The configuration to use
-		 * @param {Boolean} fakeType Is this Key-word a attribute of the Workitem
-		 */
-		_readAttributeValuesWithNoDeepValue: function _readAttributeValuesWithNoDeepValue(_queryElement, queryList, allowDeepChild, updateTitle, configuration, fakeType) {
+		_getCurrentUser: function _getCurrentUser() {
+			return com.ibm.team.repository.web.client.internal.AUTHENTICATED_CONTRIBUTOR;
+		},
+		_applyCustomCurrentAttributeToPredefined: function _applyCustomCurrentAttributeToPredefined() {
 			var _this4 = this;
+
+			var userDataKeys = ['archived', 'emailAddress', 'immutable', 'itemId', 'modified', 'name', 'stateId', 'userId'];
+
+			var currentUserData = this._getCurrentUser();
+
+			if (currentUserData) {
+				userDataKeys.forEach(function (key) {
+					_this4._addPredefinedKeyValue("current.user.".concat(key), currentUserData[key]);
+				});
+			} else {
+				console.warn("Failed to load the current user");
+			}
+
+			var now = Date.now();
+			var currentDate = new Date(now);
+			var dateString = currentDate.toUTCString();
+
+			this._addPredefinedKeyValue('current.date', dateString);
+
+			this._addPredefinedKeyValue('current.date.f.g.time', this._formateDate(now, 'hh\:mnmn\:ss'));
+
+			this._addPredefinedKeyValue('current.date.f.g.date', this._formateDate(now, 'dd/mm/yyyy'));
+
+			this._addPredefinedKeyValue('current.date.f.us.date', this._formateDate(now, 'mm/dd/yyyy'));
+
+			this._addPredefinedKeyValue('current.date.l.time', currentDate.toTimeString());
+
+			this._addPredefinedKeyValue('current.date.l.date', currentDate.toDateString());
+		},
+		_addPredefinedKeyValue: function _addPredefinedKeyValue(key, value) {
+			this.predefinedAttributes.push({
+				key: key,
+				value: value
+			});
+		},
+		_readAttributeValuesWithNoDeepValue: function _readAttributeValuesWithNoDeepValue(_queryElement, queryList, allowDeepChild, updateTitle, configuration, fakeType) {
+			var _this5 = this;
 
 			queryList.forEach(function (queryAttributeElement) {
 				if (fakeType) {
@@ -392,28 +314,13 @@ define(["dojo/_base/declare"], function (declare) {
 					queryAttributeElement.appendChild(valueElement);
 				}
 
-				_this4.keyValueMap.push(["".concat(_queryElement.textContent, ":").concat(_this4._globalDynamicCounterGetValueContent(_queryElement.textContent), ":").concat(queryAttributeElement.querySelector("key").textContent), queryAttributeElement.querySelector("value")]);
+				_this5.keyValueMap.push(["".concat(_queryElement.textContent, ":").concat(_this5._globalDynamicCounterGetValueContent(_queryElement.textContent), ":").concat(queryAttributeElement.querySelector("key").textContent), queryAttributeElement.querySelector("value")]);
 			});
 
 			if (allowDeepChild) {
 				this._childWasLoaded(updateTitle, configuration);
 			}
 		},
-
-		/**
-		 * Create a new Entry for a Dynamic-Counter or update the counter
-		 * 
-		 * @param {String} name Name of the Dynamic-Counter
-		 
-		 * @param {Boolean} forceCreate Overwrite with default value if already existing
-		 * @default false
-		 * 
-		 * @param {Number} valueToAdd How much to add to the counter
-		 * @default 1
-		 * 
-		 * @param {Number} defaultValue Start value of the counter
-		 * @default 0
-		 */
 		_globalDynamicCounterCreateOrUpdate: function _globalDynamicCounterCreateOrUpdate(name) {
 			var forceCreate = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 			var valueToAdd = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
@@ -433,14 +340,6 @@ define(["dojo/_base/declare"], function (declare) {
 
 			this.dynamicVariableCounter.push([name, defaultValue]);
 		},
-
-		/**
-		 * Get the current counter of a specific Dynamic-Counter
-		 * 
-		 * @param {String} name Name of the Dynamic-Counter
-		 * 
-		 * @returns {Number|undefined} Current count of the Dynamic-Counter
-		 */
 		_globalDynamicCounterGetValueContent: function _globalDynamicCounterGetValueContent(name) {
 			for (var i = 0; i < this.dynamicVariableCounter.length; i++) {
 				if (this.dynamicVariableCounter[i][0] == name) {
@@ -450,48 +349,35 @@ define(["dojo/_base/declare"], function (declare) {
 
 			return undefined;
 		},
-
-		/**
-		 * Apply the current configuration which is given as an attribute
-		 * 
-		 * @param {JSON} configurationJSON Configuration which is currently used
-		 */
 		_applyConfigurationToWorkitem: function _applyConfigurationToWorkitem(configurationJSON) {
 			this.dynamicHeightList = [];
 
 			try {
-				// Load the configuration based on the Type of the workitem
-				var _activeConfigurationJSON = this._loadConfigurationByWorkitem(configurationJSON); // Check if the could be found any configuration
-
+				var _activeConfigurationJSON = this._loadConfigurationByWorkitem(configurationJSON);
 
 				if (_activeConfigurationJSON == null) {
 					this.parentWidget.showErrorMessage("No configuration can be found or loaded");
 					return;
-				} // Updates the width value to the value from the current configuration
+				}
 
-
-				this.activeConfigurationWidth = _activeConfigurationJSON.config.width; // Create the Table
-
-				this.parentWidget.getHolderElement().appendChild(this._generateContentTable(_activeConfigurationJSON.config.width, _activeConfigurationJSON.config.height, _activeConfigurationJSON.config.border, _activeConfigurationJSON.config.tablePosition)); // Check if values are in the correct format
+				this.activeConfigurationWidth = _activeConfigurationJSON.config.width;
+				this.parentWidget.getHolderElement().appendChild(this._generateContentTable(_activeConfigurationJSON.config.width, _activeConfigurationJSON.config.height, _activeConfigurationJSON.config.border, _activeConfigurationJSON.config.tablePosition));
 
 				if (_activeConfigurationJSON.values == undefined || !Array.isArray(_activeConfigurationJSON.values)) {
 					throw SyntaxError;
-				} // Go through each value in the current configuration and draw the container
-
+				}
 
 				for (var _valueCount = 0; _valueCount < _activeConfigurationJSON.values.length; _valueCount++) {
 					var _configurationValue = _activeConfigurationJSON.values[_valueCount];
 
 					this._drawContainerInTable(_configurationValue.start, _configurationValue.end, _configurationValue.regionID, _configurationValue.backColor, _configurationValue.borderless);
-				} // Go through each value in the current configuration and add text to the container
-
+				}
 
 				for (var _valueCount2 = 0; _valueCount2 < _activeConfigurationJSON.values.length; _valueCount2++) {
-					var _configurationValue2 = _activeConfigurationJSON.values[_valueCount2]; // Check if there is any text which should be drawn
+					var _configurationValue2 = _activeConfigurationJSON.values[_valueCount2];
 
 					if (_configurationValue2.textContent != null || _configurationValue2.textContent !== "") {
-						this._setContentOfContainer(_configurationValue2.start, _configurationValue2.end, _configurationValue2.regionID, _configurationValue2.textContent, _configurationValue2.fontSize, _configurationValue2.textBinding, _configurationValue2.textVertical, _configurationValue2.textColor, _configurationValue2.toolTipContent); //Add ID of found dynamicHeight Value
-
+						this._setContentOfContainer(_configurationValue2.start, _configurationValue2.end, _configurationValue2.regionID, _configurationValue2.textContent, _configurationValue2.fontSize, _configurationValue2.textBinding, _configurationValue2.textVertical, _configurationValue2.textColor, _configurationValue2.toolTipContent);
 
 						if (_configurationValue2.dynamicHeight) {
 							this.dynamicHeightList.push(_configurationValue2.regionID);
@@ -503,14 +389,6 @@ define(["dojo/_base/declare"], function (declare) {
 				console.error(e);
 			}
 		},
-
-		/**
-		 * Get the correct Type from the configuration
-		 * 
-		 * @param {JSON} configuration The configuration which is used
-		 * 
-		 * @returns {JSON} The configuration which was found. If nothing found null will be returned
-		 */
 		_loadConfigurationByWorkitem: function _loadConfigurationByWorkitem(configuration) {
 			var _backupID = null;
 
@@ -541,22 +419,8 @@ define(["dojo/_base/declare"], function (declare) {
 
 			return null;
 		},
-
-		/**
-		 * Translate a given text which keywords
-		 * 
-		 * @param {String} textContent Text which should get Translated
-		 * 
-		 * @param {String} _forceSelector Which Node should get read if containing. Null will ignore the forced Node
-		 * @default null
-		 * 
-		 * @param {Boolean} _defaultOnForceFailed If nothing was found, while forcing the Node, should the default-Value get loaded
-		 * @default true
-		 * 
-		 * @returns {String} Formated and Translated text
-		 */
 		_checkRegexAndTranslate: function _checkRegexAndTranslate(textContent) {
-			var _this5 = this;
+			var _this6 = this;
 
 			var regionID = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
@@ -573,17 +437,14 @@ define(["dojo/_base/declare"], function (declare) {
 			var _returnValue = textContent;
 
 			while ((_m = _regex.exec(textContent)) !== null) {
-				// This is necessary to avoid infinite loops with zero-width matches
 				if (_m.index === _regex.lastIndex) {
 					_regex.lastIndex++;
-				} // Check every result which got found
-
+				}
 
 				_m.forEach(function (match, groupIndex) {
-					var _replaceValue = match; // Remove the "{{" and "}}" characters and split the command
+					var _replaceValue = match;
 
-					var _contentID = match.substring(2, match.length - 2).split("#"); // Check if the word contains the "*" character at the beginning or the end
-
+					var _contentID = match.substring(2, match.length - 2).split("#");
 
 					var _checkEndWith = _contentID[0].startsWith("*");
 
@@ -593,18 +454,16 @@ define(["dojo/_base/declare"], function (declare) {
 						_contentID[0] = _contentID[0].substring(0, _contentID[0].length - 1);
 					} else if (_checkEndWith) {
 						_contentID[0] = _contentID[0].substring(1, _contentID[0].length);
-					} // Check every value in the List, to check if the key can be found
-
+					}
 
 					for (var i = 0; i < _mainContainer.keyValueMap.length; i++) {
 						var _mapElement = _mainContainer.keyValueMap[i];
 
 						if (_mapElement[0] == _contentID[0] || _checkStartWith && _mapElement[0].startsWith(_contentID[0]) || _checkEndWith && _mapElement[0].endsWith(_contentID[0])) {
-							// Set the text value which should be replaced with the match
 							_replaceValue = _mainContainer._translateValueToText(_mapElement[1], _contentID.length > 1 ? _contentID[1].replace(/\[.*\]/g, "") : null, _forceSelector, _defaultOnForceFailed);
 
 							if (_contentID.length > 1) {
-								var returnSmartCommandValue = _this5._checkAndApplySmartCommand(_contentID[0], _contentID[1], _replaceValue, regionID);
+								var returnSmartCommandValue = _this6._checkAndApplySmartCommand(_contentID[0], _contentID[1], _replaceValue, regionID);
 
 								if (!returnSmartCommandValue.show) {
 									_replaceValue = "";
@@ -615,32 +474,18 @@ define(["dojo/_base/declare"], function (declare) {
 
 							break;
 						}
-					} // Check if the match should can be returned empty if nothing was found
-
+					}
 
 					if (_replaceValue === match && _contentID.length > 1 && _contentID[1].startsWith("?")) {
 						_replaceValue = "";
-					} // Replace the regex value with the found value
-
+					}
 
 					_returnValue = _returnValue.replace(match, _replaceValue);
 				});
-			} // Return the everything
-
+			}
 
 			return _returnValue;
 		},
-
-		/**
-		 * Translate a value to the text value with optional command
-		 * 
-		 * @param {XMLDocument} value The value which should get Translated
-		 * 
-		 * @param {String} command Access an extra command after the value was found
-		 * @default null
-		 * 
-		 * @returns {String} Content of the value
-		 */
 		_translateValueToText: function _translateValueToText(value) {
 			var _command = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
@@ -648,10 +493,9 @@ define(["dojo/_base/declare"], function (declare) {
 
 			var _defaultOnForceFailed = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 
-			// Variables important for the function
 			var _mainContainer = this;
 
-			var _allowEmptyReturn = false; // Check if the Return-Value can be empty
+			var _allowEmptyReturn = false;
 
 			if (Boolean(_command) && _command.charAt(0) == '?') {
 				_allowEmptyReturn = true;
@@ -668,8 +512,7 @@ define(["dojo/_base/declare"], function (declare) {
 				if (!_defaultOnForceFailed) {
 					return _allowEmptyReturn ? "" : "[Unknown-Selector]";
 				}
-			} // Check the and match Values in the XML Object
-
+			}
 
 			if (Boolean(value.querySelector(":scope > label"))) {
 				var _labelValue = value.querySelector(":scope > label");
@@ -684,33 +527,25 @@ define(["dojo/_base/declare"], function (declare) {
 
 				return this._getValueFromXML(value, _contentValue, _allowEmptyReturn, _command);
 			} else if (Boolean(value.querySelector(":scope > items"))) {
-				// Get list of all items in list
-				var _itemsValue = value.querySelectorAll(":scope > items"); // Verify that this is a NodeList or ArrayList
-
+				var _itemsValue = value.querySelectorAll(":scope > items");
 
 				if (NodeList.prototype.isPrototypeOf(_itemsValue) || Array.isArray(_itemsValue)) {
-					// Check if there is any content
 					if (_itemsValue.length == 0) {
 						return _allowEmptyReturn ? "" : "[Empty-List]";
 					} else {
-						// Check if there is a command
 						if (Boolean(_command)) {
-							// Check if the value is a number and isn't bigger than the List
 							if (!isNaN(Number(_command)) && _itemsValue.length >= Number(_command) + 1) {
 								return this._translateValueToText(_itemsValue[Number(_command)]);
 							} else {
 								return _itemsValue[_command] != undefined ? _itemsValue[_command] : _allowEmptyReturn ? "" : "[Undefined-Command]";
 							}
 						} else {
-							// Prepare the String to be generated from the List
-							var _listReturn = ""; // Go through each value in the List
+							var _listReturn = "";
 
 							_itemsValue.forEach(function (itemElement) {
-								// Check if there should be added a ,
 								if (_listReturn != "") {
 									_listReturn += ", ";
-								} // Translate the XML value from the List to a text
-
+								}
 
 								_listReturn += _mainContainer._translateValueToText(itemElement);
 							});
@@ -725,24 +560,6 @@ define(["dojo/_base/declare"], function (declare) {
 				return _allowEmptyReturn ? "" : "[Empty]";
 			}
 		},
-
-		/**
-		 * Check if there is an SmartCommand and apply it afterwards
-		 * 
-		 * @param {String} textContentKey The value before the command
-		 * @default ""
-		 * 
-		 * @param {String} command The command which should get checked
-		 * @default null
-		 * 
-		 * @param {String} contentValue The value of the keyValue
-		 * @default ""
-		 * 
-		 * @param {Number} regionID The ID of the region the commands belongs to
-		 * @default null
-		 * 
-		 * @returns {Boolean} Should the Translated value be shown
-		 */
 		_checkAndApplySmartCommand: function _checkAndApplySmartCommand() {
 			var textContentKey = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
 			var command = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
@@ -765,10 +582,7 @@ define(["dojo/_base/declare"], function (declare) {
 					bracketMatch = bracketMatch.slice(1, -1);
 					var keyWordList = bracketMatch.split(";");
 					keyWordList.forEach(function (keyWordListElement) {
-						// Important ! - Everything in brackets, form the Regex, will get included in the split
-						var listKeyAndValue = keyWordListElement.split(/([a-zA-Z0-9]{1,})\:/gm); // 0 Item is always empty / "" as String, because of the way the Regex-Split gets calculated
-						// There are some exception. This gets handled, by checking if the content is empty or not.
-
+						var listKeyAndValue = keyWordListElement.split(/([a-zA-Z0-9]{1,})\:/gm);
 						smartCommandConfig = self._handleSmartCommandKeys(listKeyAndValue[0] !== "" ? listKeyAndValue[0] + listKeyAndValue[1] : listKeyAndValue[1], listKeyAndValue[2], smartCommandConfig);
 					});
 
@@ -781,33 +595,18 @@ define(["dojo/_base/declare"], function (declare) {
 				overwrite: smartCommandConfig.overwrite
 			};
 		},
-
-		/**
-		 * Allocate all the keys and values
-		 * 
-		 * @param {String} key Where the value should get allocated to 
-		 * @param {String} value The Value which should get allocated to the key
-		 * 
-		 * @param {JSON} previousValue What the current allocated values are
-		 * @default {}
-		 * 
-		 * @returns {JSON} Intermediate result of the allocation of the keys and values
-		 */
 		_handleSmartCommandKeys: function _handleSmartCommandKeys(key, value) {
 			var previousValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
 			switch (key) {
-				//Set the Type
 				case "t":
 					previousValue.type = value;
 					break;
-				//Set if the value should be shown 
 
 				case "s":
 				case "show":
 					previousValue.show = value == "0" ? false : true;
 					break;
-				//All other keys
 
 				default:
 					if (key != undefined && key != "") {
@@ -819,17 +618,8 @@ define(["dojo/_base/declare"], function (declare) {
 
 			return previousValue;
 		},
-
-		/**
-		 * Apply all the changes which where collected
-		 * 
-		 * @param {String} textContentKey The Value before the command
-		 * @param {JSON} previousValue The collected results of the command
-		 * @param {String} keyWordContent The Value which should get placed
-		 * @param {Number} regionID The ID of the region where it should get applied
-		 */
 		_applySmartCommandConfig: function _applySmartCommandConfig(textContentKey, previousValue, keyWordContent, regionID) {
-			var _this6 = this;
+			var _this7 = this;
 
 			if (previousValue.type === "css" && previousValue.css !== undefined) {
 				this.parentWidget.getHolderElement().querySelectorAll('[regionID="' + regionID + '"]').forEach(function (element) {
@@ -839,7 +629,7 @@ define(["dojo/_base/declare"], function (declare) {
 				});
 			} else if (previousValue.type === "table" && previousValue.table !== undefined) {
 				this.taskScheduler.push(function () {
-					var contentHolderElement = _this6.parentWidget.getHolderElement().querySelector('[regionID="' + regionID + '"] > .textHolder > .textContainer > .textDisplay');
+					var contentHolderElement = _this7.parentWidget.getHolderElement().querySelector('[regionID="' + regionID + '"] > .textHolder > .textContainer > .textDisplay');
 
 					if (contentHolderElement == null) {
 						return;
@@ -861,7 +651,7 @@ define(["dojo/_base/declare"], function (declare) {
 					var boldHeader = previousValue.boldHeader != undefined ? previousValue.boldHeader : "0";
 					var informationTable = document.createElement("tr");
 					var globalTableFilter = new Map();
-					var globalTableFormatter = new Map(); //assign filter for not displayed filters
+					var globalTableFormatter = new Map();
 
 					if (previousValue.filter != undefined) {
 						var splitValue = previousValue.filter.split(",");
@@ -895,9 +685,6 @@ define(["dojo/_base/declare"], function (declare) {
 									break;
 
 								case "f":
-									// Will overwrite the filtered value 
-									// for this keyword if already created
-									// in the previousValue.filter
 									globalTableFilter.set(tableHeaderElementArray[0], _element[1]);
 									break;
 
@@ -911,7 +698,7 @@ define(["dojo/_base/declare"], function (declare) {
 						}
 
 						if (boldHeader == "1") {
-							tableHeader.innerHTML = _this6._striptTags(tableHeader.innerText.bold(), "<b>");
+							tableHeader.innerHTML = _this7._striptTags(tableHeader.innerText.bold(), "<b>");
 						}
 
 						informationTable.appendChild(tableHeader);
@@ -933,7 +720,7 @@ define(["dojo/_base/declare"], function (declare) {
 									localCheckingList.push(value);
 								}
 
-								var localTranslatedValue = _this6._checkRegexAndTranslate("{{".concat(textContentKey, ":").concat(_i2, ":").concat(key, "}}"));
+								var localTranslatedValue = _this7._checkRegexAndTranslate("{{".concat(textContentKey, ":").concat(_i2, ":").concat(key, "}}"));
 
 								for (var c = 0; c < localCheckingList.length; c++) {
 									var listElement = localCheckingList[c];
@@ -963,28 +750,27 @@ define(["dojo/_base/declare"], function (declare) {
 								var tableContentRow = document.createElement("td");
 								var translateString = "{{".concat(textContentKey, ":").concat(_i2, ":").concat(tableContentElement.split("&&")[0], "}}");
 
-								var translatedValue = _this6._checkRegexAndTranslate(translateString);
+								var translatedValue = _this7._checkRegexAndTranslate(translateString);
 
 								var formatValue = globalTableFormatter.get(index);
 
 								if (formatValue != undefined && formatValue.length == 2) {
 									switch (formatValue[0]) {
 										case "date":
-											translatedValue = _this6._formateDate(_this6._checkRegexAndTranslate(translateString, null, "id"), formatValue[1]);
+											translatedValue = _this7._formateDate(_this7._checkRegexAndTranslate(translateString, null, "id"), formatValue[1]);
 											break;
 
 										case "link":
-											translatedValue = _this6._formateLink(translatedValue, formatValue[1]);
+											translatedValue = _this7._formateLink(translatedValue, formatValue[1]);
 											break;
 
 										case "clickNode":
 											var formatedValueString = "{{".concat(textContentKey, ":").concat(_i2, ":").concat(formatValue[1], "}}");
 
-											var translatedFormatedValueString = _this6._checkRegexAndTranslate(formatedValueString); // Only create a link, if the Node-Value exists
-
+											var translatedFormatedValueString = _this7._checkRegexAndTranslate(formatedValueString);
 
 											if (formatedValueString !== translatedFormatedValueString) {
-												translatedValue = _this6._formateLink(translatedFormatedValueString, translatedValue);
+												translatedValue = _this7._formateLink(translatedFormatedValueString, translatedValue);
 											}
 
 											break;
@@ -994,7 +780,7 @@ define(["dojo/_base/declare"], function (declare) {
 									}
 								}
 
-								tableContentRow.innerHTML = _this6._striptTags(translateString == translatedValue ? "-" : translatedValue, _this6.GLOBAL_HTML_ALLOWED_TAGS);
+								tableContentRow.innerHTML = _this7._striptTags(translateString == translatedValue ? "-" : translatedValue, _this7.GLOBAL_HTML_ALLOWED_TAGS);
 								tableContentRow.style.textAlign = contentHolderElement.parentNode.style.textAlign;
 								tableContentRow.style.border = borderValue;
 								valueRowElement.appendChild(tableContentRow);
@@ -1015,7 +801,7 @@ define(["dojo/_base/declare"], function (declare) {
 				previousValue.overwrite = this._formateLink(keyWordContent, previousValue.link);
 			} else if (previousValue.type === "image") {
 				this.taskScheduler.push(function () {
-					var contentHolderElement = _this6.parentWidget.getHolderElement().querySelector('[regionID="' + regionID + '"] > .textHolder > .textContainer > .textDisplay');
+					var contentHolderElement = _this7.parentWidget.getHolderElement().querySelector('[regionID="' + regionID + '"] > .textHolder > .textContainer > .textDisplay');
 
 					if (contentHolderElement == null) {
 						return;
@@ -1032,7 +818,7 @@ define(["dojo/_base/declare"], function (declare) {
 					if (previousValue.src != undefined) {
 						imageElement.src = previousValue.src;
 					} else if (previousValue.src_by_name != undefined && previousValue.src_by_node != undefined && previousValue.src_by_result) {
-						imageElement.src = _this6._getValueFromListByKey(textContentKey, previousValue.src_by_name, previousValue.src_by_node, previousValue.src_by_result, !(previousValue.src_by_case != undefined && previousValue.src_by_case == 0));
+						imageElement.src = _this7._getValueFromListByKey(textContentKey, previousValue.src_by_name, previousValue.src_by_node, previousValue.src_by_result, !(previousValue.src_by_case != undefined && previousValue.src_by_case == 0));
 					} else {
 						imageElement.src = keyWordContent;
 					}
@@ -1046,7 +832,7 @@ define(["dojo/_base/declare"], function (declare) {
 				});
 			} else if (previousValue.type === "toggle") {
 				this.taskScheduler.push(function () {
-					var contentHolderElement = _this6.parentWidget.getHolderElement().querySelector('[regionID="' + regionID + '"] > .textHolder > .textContainer > .textDisplay');
+					var contentHolderElement = _this7.parentWidget.getHolderElement().querySelector('[regionID="' + regionID + '"] > .textHolder > .textContainer > .textDisplay');
 
 					if (contentHolderElement == null) {
 						return;
@@ -1064,11 +850,11 @@ define(["dojo/_base/declare"], function (declare) {
 					svgContainer.innerHTML = '<svg class="no-event" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"	 width="100%" height="100%" viewBox="0 0 284.929 284.929" style="enable-background:new 0 0 284.929 284.929;"	 xml:space="preserve"><g>	<path d="M282.082,76.511l-14.274-14.273c-1.902-1.906-4.093-2.856-6.57-2.856c-2.471,0-4.661,0.95-6.563,2.856L142.466,174.441		L30.262,62.241c-1.903-1.906-4.093-2.856-6.567-2.856c-2.475,0-4.665,0.95-6.567,2.856L2.856,76.515C0.95,78.417,0,80.607,0,83.082		c0,2.473,0.953,4.663,2.856,6.565l133.043,133.046c1.902,1.903,4.093,2.854,6.567,2.854s4.661-0.951,6.562-2.854L282.082,89.647		c1.902-1.903,2.847-4.093,2.847-6.565C284.929,80.607,283.984,78.417,282.082,76.511z"/></g></svg>';
 					contentHolderElement.appendChild(svgContainer);
 
-					if (_this6.ignoreDynamicValues || !Boolean(previousValue.toggle)) {
+					if (_this7.ignoreDynamicValues || !Boolean(previousValue.toggle)) {
 						return;
 					}
 
-					var self = _this6;
+					var self = _this7;
 					svgContainer.setAttribute('toggle', previousValue.toggle);
 					svgContainer.classList.add("pointer");
 					svgContainer.addEventListener('click', function (event) {
@@ -1103,33 +889,11 @@ define(["dojo/_base/declare"], function (declare) {
 				});
 			}
 		},
-
-		/**
-		 * Set the visibility from a Region
-		 * 
-		 * @param {String} region Id of the region
-		 * @param {Boolean} isVisible Should the Region be visible or not
-		 */
 		_setRegionVisibilityByID: function _setRegionVisibilityByID(region, isVisible) {
 			this.parentWidget.getHolderElement().querySelectorAll("[regionID='".concat(region, "']")).forEach(function (entry) {
 				entry.style.display = isVisible ? 'table-cell' : 'none';
 			});
 		},
-
-		/**
-		 * Get the Content of the entry with a specific content in a specific key inside a list
-		 * 
-		 * @param {String} textContentKey Name of the List which should get searched
-		 * @param {String} valueToCheck Which value needs to be found. Allowed to use * at the beginning or
-		 * 								the end of the value.
-		 * @param {String} contentKey Where the value should be placed in the list
-		 * @param {String} resultKey Which value to return from the list when found
-		 * 
-		 * @param {Boolean} caseSensitive Should upper/lower case be considered
-		 * @default caseSensitive: true
-		 * 
-		 * @returns {String} Content of the entry
-		 */
 		_getValueFromListByKey: function _getValueFromListByKey(textContentKey, valueToCheck, contentKey, resultKey) {
 			var caseSensitive = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
 
@@ -1166,37 +930,11 @@ define(["dojo/_base/declare"], function (declare) {
 				return "";
 			}
 		},
-
-		/**
-		 * Format any given date by the given format. If the formation
-		 * isn't possible, the original date will be returned. 
-		 * IE and EDGE will always fail and return the original Date
-		 * 
-		 * @param {String|Date} keyWordContent The date with should get formated
-		 * @param {String} formatter How the date should get formated. 
-		 * Using any character double, will tell the system to add a '0' in front
-		 * of the value, if it is smaller than 10.
-		 * 
-		 * s  = Second,
-		 * mn = Minute,
-		 * h  = Hour,
-		 * d  = Day,
-		 * m  = Month,
-		 * yy = Year
-		 * 
-		 * @example _formateDate("2019-02-12T14:24:51.838Z", "dd.mm.yyyy")
-		 * 
-		 * @returns {String} Formated date if possible, else original date
-		 */
 		_formateDate: function _formateDate(keyWordContent, formatter) {
-			//Currently following Characters can't be used            : ; #
-			//Characters which can get bypassed by using \{char}      :
 			var returnValue = formatter.toLowerCase();
-			var dateValue = new Date(keyWordContent); // Check if the Value could get translated to a Date
+			var dateValue = new Date(keyWordContent);
 
 			if (isNaN(dateValue)) {
-				// Set Value of the filed to the content of the Keyword 
-				// which is used to call this command
 				return keyWordContent;
 			}
 
@@ -1207,79 +945,41 @@ define(["dojo/_base/declare"], function (declare) {
 			returnValue = returnValue.replace(/hh/gm, "".concat(dateValue.getHours() < 10 ? "0" : "").concat(dateValue.getHours()));
 			returnValue = returnValue.replace(/h/gm, dateValue.getHours());
 			returnValue = returnValue.replace(/dd/gm, "".concat(dateValue.getDate() < 10 ? "0" : "").concat(dateValue.getDate()));
-			returnValue = returnValue.replace(/d/gm, dateValue.getDate()); // IMPORTANT: MONTH IN JAVASCRIPT START WITH ZERO AS JANUARY !!!!!!!
-
+			returnValue = returnValue.replace(/d/gm, dateValue.getDate());
 			returnValue = returnValue.replace(/mm/gm, "".concat(dateValue.getMonth() < 9 ? "0" : "").concat(dateValue.getMonth() + 1));
 			returnValue = returnValue.replace(/m/gm, dateValue.getMonth() + 1);
 			returnValue = returnValue.replace(/yyyy/gm, "".concat(dateValue.getFullYear()));
 			returnValue = returnValue.replace(/yy/gm, "".concat(String(dateValue.getFullYear()).slice(2)));
 			return returnValue;
 		},
-
-		/**
-		 * Instead of the URL, create a Link, which is a clickable text.
-		 * The page will after clicking always be opened in a new Tab.
-		 * 
-		 * @param {String} keyWordContent The URL for which should get formated
-		 * @param {String} formatter The Text, which the URL should display
-		 * 
-		 * @returns {String} The Formated URL as String in the HTML-Format
-		 */
 		_formateLink: function _formateLink(keyWordContent, formatter) {
 			return "<a href=\"".concat(keyWordContent, "\" target=\"_blank\" rel=\"noopener noreferrer\">").concat(formatter, "</a>");
 		},
-
-		/**
-		 * Get the Value from a given XML value
-		 * 
-		 * @param {XMLDocument} xmlDocument The parent of the XML which should get searched
-		 * @param {XMLDocument} xmlValue The XML, which should get searched
-		 * @param {Boolean} allowEmptyReturn Can be value, which get returned be empty
-		 * @param {String} command Access an extra command after the value was found
-		 * 
-		 * @returns {String} Content of the XML Value
-		 */
 		_getValueFromXML: function _getValueFromXML(xmlDocument, xmlValue, allowEmptyReturn, command) {
 			if (Boolean(command)) {
-				// Command found
 				if (xmlValue.textContent[command] != undefined) {
-					// Command does exists
 					return xmlValue.textContent[command];
 				} else {
-					// Command unknown
 					return allowEmptyReturn ? "" : "[Undefined-Command]";
 				}
 			} else {
-				// Command not defined
 				return this._matchLinksToText(xmlValue.textContent, xmlDocument.querySelectorAll(":scope > links"));
 			}
 		},
-
-		/**
-		 * Add links to a given Texted
-		 * 
-		 * @param {String} text Text which should get converted
-		 * @param {NodeList} links List with all the Links
-		 * 
-		 * @returns {String} Text with the links
-		 */
 		_matchLinksToText: function _matchLinksToText(text, links) {
-			// Check if the type of the links is correct
 			if (Boolean(links) && (NodeList.prototype.isPrototypeOf(links) || Array.isArray(links)) && links.length > 0) {
-				var _returnValue = text; // Sort the list of links, based on there position from the highest to the lowest
+				var _returnValue = text;
 
 				var _sortedLinksList = [].slice.call(links).sort(function (a, b) {
 					return Number(a.querySelector("offset").textContent) > Number(b.querySelector("offset").textContent) ? -1 : 1;
-				}); // Handle every link in the entry
-
+				});
 
 				_sortedLinksList.forEach(function (elementLinkNode) {
 					var _elementLinkNodeOffset = Number(elementLinkNode.querySelector("offset").textContent);
 
 					var _elementLinkNodeLength = Number(elementLinkNode.querySelector("length").textContent);
 
-					var _elementLinkNodeWebUri = elementLinkNode.querySelector("weburi").textContent; // Replace the content of the text with the links
-
+					var _elementLinkNodeWebUri = elementLinkNode.querySelector("weburi").textContent;
 					_returnValue = _returnValue.substring(0, _elementLinkNodeOffset) + "<a href='" + _elementLinkNodeWebUri + "' target='_blank' rel='noopener noreferrer'>" + _returnValue.substring(_elementLinkNodeOffset, _elementLinkNodeOffset + _elementLinkNodeLength) + "</a>" + _returnValue.substring(_elementLinkNodeOffset + _elementLinkNodeLength);
 				});
 
@@ -1288,44 +988,17 @@ define(["dojo/_base/declare"], function (declare) {
 				return text;
 			}
 		},
-
-		/**
-		 * Strip all the unneeded HTML Tags from a HTML Text
-		 * 
-		 * @param {String} input The HTML text
-		 * @param {String} allowed All the Tags which are allowed to be used
-		 * 
-		 * @returns {String} Text with escaped HTML Tags
-		 * 
-		 * @example _striptTags("<b><u>My</u> allowed <i>Tag</i></b> an this is <center><li>my forbidden</li> Tag</center>", "<b><i><u><p>")
-		 */
 		_striptTags: function _striptTags(input, allowed) {
-			// Remove whitespace and unnecessary characters 
-			allowed = (((allowed || '') + '').toLowerCase().match(/<[a-z][a-z0-9]*>/g) || []).join(''); // Create the Regex which should be used
-
+			allowed = (((allowed || '') + '').toLowerCase().match(/<[a-z][a-z0-9]*>/g) || []).join('');
 			var _tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi,
-				_commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi; // Replace the content based on the Tags
-
-			return input.replace(_commentsAndPhpTags, '') // Check if the tag is in list
-				.replace(_tags, function (_0, _1) {
-					// Verify if there is something, that should be replaced
-					return allowed.indexOf('<' + _1.toLowerCase() + '>') > -1 ? _0 : _0.replace("<", "&lt;").replace(">", "&gt;");
-				});
+				_commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
+			return input.replace(_commentsAndPhpTags, '').replace(_tags, function (_0, _1) {
+				return allowed.indexOf('<' + _1.toLowerCase() + '>') > -1 ? _0 : _0.replace("<", "&lt;").replace(">", "&gt;");
+			});
 		},
-
-		/**
-		 * Generate the table where the content will be set
-		 * 
-		 * @param {Number} width How many cells per row
-		 * @param {Number} height How many rows
-		 * @param {String} tablePosition Where the table should be positioned to
-		 * 
-		 * @returns {Element} Table with the size of the given parameters
-		 */
 		_generateContentTable: function _generateContentTable(width, height, border) {
 			var tablePosition = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "center";
 
-			// Check if there is any value and the value is a number
 			if (width == null || height == null || !Number(width) || !Number(height)) {
 				return null;
 			}
@@ -1333,8 +1006,7 @@ define(["dojo/_base/declare"], function (declare) {
 			try {
 				var _tableElement = document.createElement("table");
 
-				_tableElement.classList.add("workitemTable"); // Change the position of the table
-
+				_tableElement.classList.add("workitemTable");
 
 				switch (tablePosition) {
 					case "left":
@@ -1348,12 +1020,10 @@ define(["dojo/_base/declare"], function (declare) {
 
 				if (this._pageSizeOptimize !== null) {
 					if (this._pageSizeOptimize.height !== undefined) {
-						//_tableElement.style.height = this._pageSizeOptimize.height + "px";
 						_tableElement.style.height = this._pageSizeOptimize.height;
 					}
 
 					if (this._pageSizeOptimize.width !== undefined) {
-						//_tableElement.style.width = this._pageSizeOptimize.width + "px";
 						_tableElement.style.width = this._pageSizeOptimize.width;
 					}
 				}
@@ -1379,23 +1049,6 @@ define(["dojo/_base/declare"], function (declare) {
 				return null;
 			}
 		},
-
-		/**
-		 * Generate all the Containers and add some basic css based on the parameters,
-		 * which were provided.
-		 * 
-		 * @param {*} startPosition The coordinates where the container starts
-		 * @param {*} endPosition The coordinates where the container ends
-		 * 
-		 * @param {Number} regionID The ID of the Region this container should belong to
-		 * @default null
-		 * 
-		 * @param {String} backgroundColor The background color of the container
-		 * @default null
-		 * 
-		 * @param {Boolean} borderless If the regions should have a border or not
-		 * @default null
-		 */
 		_drawContainerInTable: function _drawContainerInTable(startPosition, endPosition) {
 			var _regionID = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
@@ -1405,36 +1058,29 @@ define(["dojo/_base/declare"], function (declare) {
 
 			if (startPosition == null || endPosition == null || startPosition.x == undefined || startPosition.y == undefined || isNaN(startPosition.x) || isNaN(startPosition.y) || endPosition.x == undefined || endPosition.y == undefined || isNaN(endPosition.x) || isNaN(endPosition.y)) {
 				throw SyntaxError;
-			} // Rearrange the positions in order to draw the container correctly
+			}
 
-
-			var _rearrangedPositions = this._rearrangePositions(startPosition, endPosition); // Go through each possible position for the region
-
+			var _rearrangedPositions = this._rearrangePositions(startPosition, endPosition);
 
 			for (var x = _rearrangedPositions[0].x; x <= _rearrangedPositions[1].x; x++) {
-				// Ignore negative X - Axis
 				if (x < 0) {
 					continue;
 				}
 
 				for (var y = _rearrangedPositions[0].y; y <= _rearrangedPositions[1].y; y++) {
-					// Ignore negative Y - Axis
 					if (y < 0) {
 						continue;
 					}
 
-					var _generatedID = this._calculateIDByPosition(x, y); // Get the Element with an give ID
+					var _generatedID = this._calculateIDByPosition(x, y);
 
-
-					var _elementByPosition = this.parentWidget.getHolderElement().querySelector('[tableID="' + _generatedID + '"]'); // Check if the element, which gets changed, even exists
-
+					var _elementByPosition = this.parentWidget.getHolderElement().querySelector('[tableID="' + _generatedID + '"]');
 
 					if (_elementByPosition == null) {
-						// If the ID can't be found, ignore everything and go the the next one
 						continue;
 					}
 
-					_elementByPosition.style.backgroundColor = _backgroundColor == null ? "" : _backgroundColor; // Check if the Border should be overwritten and add a border to the edge if the position is correct
+					_elementByPosition.style.backgroundColor = _backgroundColor == null ? "" : _backgroundColor;
 
 					if (!_borderless) {
 						_elementByPosition.style.border = "none";
@@ -1455,9 +1101,7 @@ define(["dojo/_base/declare"], function (declare) {
 						if (x === _rearrangedPositions[1].x) {
 							_elementByPosition.style.borderRight = _borderDefaultSettings;
 						}
-					} // Setting the RegionID for use in the future, but will not
-					// be used yet.
-
+					}
 
 					if (_regionID != null) {
 						_elementByPosition.setAttribute("regionID", _regionID);
@@ -1465,35 +1109,6 @@ define(["dojo/_base/declare"], function (declare) {
 				}
 			}
 		},
-
-		/**
-		 * Set the content of a given container
-		 *  
-		 * @param {*} startPosition The coordinates where the container starts
-		 * @param {*} endPosition The coordinates where the container ends
-		 * 
-		 * @param {Number} regionID The id of the region for the container
-		 * @default null
-		 * 
-		 * @param {String} textContent The content which should get displayed
-		 * @default ""
-		 * 
-		 * @param {Number} textFont The size of the text inside the container
-		 * @default 10
-		 * 
-		 * @param {String} textBinding Alignment of the content
-		 * @default "left"
-		 * 
-		 * @param {String} textVertical Vertical position of the content
-		 * @default "top"
-		 * 
-		 * @param {String} textColor The color of the text
-		 * @default "#ffffff"
-		 * 
-		 * @param {String} toolTipContent The tooltip shown
-		 * @default ""
-		 * 
-		 */
 		_setContentOfContainer: function _setContentOfContainer(startPosition, endPosition) {
 			var _regionID = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
@@ -1509,9 +1124,7 @@ define(["dojo/_base/declare"], function (declare) {
 
 			var _toolTipContent = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : "";
 
-			var _rearrangedPositions = this._rearrangePositions(startPosition, endPosition); // Remove all negative Vales, in order to draw the Text correct
-			// and not to start from a not possible id
-
+			var _rearrangedPositions = this._rearrangePositions(startPosition, endPosition);
 
 			if (_rearrangedPositions[0].x < 0) {
 				_rearrangedPositions[0].x = 0;
@@ -1527,41 +1140,32 @@ define(["dojo/_base/declare"], function (declare) {
 
 			if (_rearrangedPositions[1].y < 0) {
 				_rearrangedPositions[1].y = 0;
-			} // Check if the content contains any value
-
+			}
 
 			if (Boolean(_textContent)) {
-				// Get the start and end element of the container based on there ID
 				var _startElement = this.parentWidget.getHolderElement().querySelector("[tableID=\"".concat(this._calculateIDByPosition(_rearrangedPositions[0].x, _rearrangedPositions[0].y), "\"]"));
 
-				var _endElement = this.parentWidget.getHolderElement().querySelector("[tableID=\"".concat(this._calculateIDByPosition(_rearrangedPositions[1].x, _rearrangedPositions[1].y), "\"]")); // Check if the both start and end elements exists
-
+				var _endElement = this.parentWidget.getHolderElement().querySelector("[tableID=\"".concat(this._calculateIDByPosition(_rearrangedPositions[1].x, _rearrangedPositions[1].y), "\"]"));
 
 				if (_startElement == null || _endElement == null) {
 					return;
-				} // Remove all the Text which else would overlap
-
+				}
 
 				while (_startElement.hasChildNodes()) {
 					_startElement.removeChild(_startElement.childNodes[0]);
-				} // Calculate the boundaries and size of the start and end element
-
+				}
 
 				var _startElementBoundaries = this._calculateBoundariesOfElement(_startElement);
 
-				var _endElementBoundaries = this._calculateBoundariesOfElement(_endElement); // Create element to hold the text and keep the size of the
-				// cell of the table
-
+				var _endElementBoundaries = this._calculateBoundariesOfElement(_endElement);
 
 				var _textHolderElement = document.createElement("div");
 
-				_textHolderElement.classList.add("textHolder"); // Create the Element and Text
-
+				_textHolderElement.classList.add("textHolder");
 
 				var _textContainerElement = document.createElement("div");
 
-				_textContainerElement.classList.add("textContainer"); //Set the tooltip if any can be found
-
+				_textContainerElement.classList.add("textContainer");
 
 				if (Boolean(_toolTipContent)) {
 					_textContainerElement.setAttribute("title", _toolTipContent);
@@ -1573,17 +1177,12 @@ define(["dojo/_base/declare"], function (declare) {
 
 				_textDisplayElement.innerHTML = this._striptTags(this._checkRegexAndTranslate(_textContent, _regionID), this.GLOBAL_HTML_ALLOWED_TAGS);
 				_textDisplayElement.style.verticalAlign = _textVertical;
-				_textDisplayElement.style.width = "inherit"; // Resize the element in order to hold the text inside of the full
-				// container instead of using the size of the table cell.
-				// -1 Needs to be done in order to ignore the boarder which is 1 px
-
+				_textDisplayElement.style.width = "inherit";
 				_textContainerElement.style.width = "".concat(_endElementBoundaries.left - _startElementBoundaries.left + _endElementBoundaries.width - 5, "px");
-				_textContainerElement.style.height = "".concat(_endElementBoundaries.top - _startElementBoundaries.top + _endElementBoundaries.height - 3, "px"); // Show the Browser the room for the vertical alignment
-
+				_textContainerElement.style.height = "".concat(_endElementBoundaries.top - _startElementBoundaries.top + _endElementBoundaries.height - 3, "px");
 				_textContainerElement.style.lineHeight = _textContainerElement.style.height;
 				_textContainerElement.style.marginLeft = "2px";
-				_textContainerElement.style.marginTop = "2px"; // Add Style to the element
-
+				_textContainerElement.style.marginTop = "2px";
 				_textContainerElement.style.fontSize = "".concat(_textFont * 10, "%");
 				_textContainerElement.style.textAlign = _textBinding;
 				_textContainerElement.style.color = _textColor;
@@ -1595,28 +1194,9 @@ define(["dojo/_base/declare"], function (declare) {
 				_startElement.appendChild(_textHolderElement);
 			}
 		},
-
-		/**
-		 * Calculate the ID of an position
-		 * 
-		 * @param {Number} x The X-Axe position
-		 * @param {Number} y The Y-Axe position
-		 * 
-		 * @returns {Number} The ID of the item at the given position
-		 */
 		_calculateIDByPosition: function _calculateIDByPosition(x, y) {
 			return y * this.activeConfigurationWidth + x;
 		},
-
-		/**
-		 * Rearrange the start and end Position in order for the start positions
-		 * to be smaller than the end positions
-		 * 
-		 * @param {[]} startPosition The Position where the start point is
-		 * @param {[]} endPosition  The Position where the end point is
-		 * 
-		 * @returns {[[],[]]} Rearranged start and end position
-		 */
 		_rearrangePositions: function _rearrangePositions(startPosition, endPosition) {
 			if (this._calculateIDByPosition(startPosition.x, startPosition.y) > this._calculateIDByPosition(endPosition.x, endPosition.y)) {
 				var _virtualStartPosition = startPosition;
@@ -1638,47 +1218,26 @@ define(["dojo/_base/declare"], function (declare) {
 
 			return [startPosition, endPosition];
 		},
-
-		/**
-		 * Calculate the boundaries of an given element
-		 * 
-		 * @param {Element} element Element which should get be calculated
-		 * 
-		 * @returns {Object} Boundaries in JSON format
-		 */
 		_calculateBoundariesOfElement: function _calculateBoundariesOfElement(element) {
-			// Get the rectangle which surrounds the element
 			var _rect = element.getBoundingClientRect(),
 				_scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
 				_scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
 			return {
-				top: Number( // Get the distance from the top of the page to the element
-					Number(_rect.top + _scrollTop).toFixed(2)),
-				left: Number( // Get the distance from the left ot the page to the element
-					Number(_rect.left + _scrollLeft).toFixed(2)),
-				width: Number( // Get the width of the element
-					Number(_rect.width).toFixed(2)),
-				height: Number( // Get the height of the element
-					Number(_rect.height).toFixed(2))
+				top: Number(Number(_rect.top + _scrollTop).toFixed(2)),
+				left: Number(Number(_rect.left + _scrollLeft).toFixed(2)),
+				width: Number(Number(_rect.width).toFixed(2)),
+				height: Number(Number(_rect.height).toFixed(2))
 			};
 		},
-
-		/**
-		 * Apply dynamic Heights by changing a deep copy configuration and redrawing the table
-		 * 
-		 * @param {Boolean} updateTitle Should "updateTitle" function get called
-		 * @param {JSON} _configuration 
-		 */
 		_applyDynamicHeights: function _applyDynamicHeights(updateTitle, _configuration) {
-			var _this7 = this;
+			var _this8 = this;
 
 			try {
 				if (this.ignoreDynamicValues || this.dynamicHeightList.length == 0) {
 					this.parentWidget.updateTitle();
 					return;
-				} //Create a deep copy
-
+				}
 
 				var configuration = JSON.parse(JSON.stringify(_configuration));
 
@@ -1690,16 +1249,14 @@ define(["dojo/_base/declare"], function (declare) {
 				}
 
 				_applyConfiguration.values.forEach(function (element) {
-					if (_this7.dynamicHeightList.includes(element.regionID)) {
-						var currentSizeHolder = _this7.parentWidget.getHolderElement().querySelector("[regionID=\"".concat(element.regionID, "\"]"));
+					if (_this8.dynamicHeightList.includes(element.regionID)) {
+						var currentSizeHolder = _this8.parentWidget.getHolderElement().querySelector("[regionID=\"".concat(element.regionID, "\"]"));
 
 						if (currentSizeHolder != null) {
-							// Add X amount of pixels, because else everything is cut off very tight
 							var currentSize = currentSizeHolder.querySelector(":scope .textDisplay").offsetHeight + 5;
 							var currentRows = element.end.y - element.start.y + 1;
-							var needRowsTotal = Math.ceil(currentSize / _this7.pixelPerRow);
-							var diffNeedCurrent = needRowsTotal - currentRows; //Start doing stuff
-
+							var needRowsTotal = Math.ceil(currentSize / _this8.pixelPerRow);
+							var diffNeedCurrent = needRowsTotal - currentRows;
 							element.end.y = element.start.y + needRowsTotal - 1;
 							element.dynamicHeight = false;
 							_applyConfiguration.config.height += diffNeedCurrent;
