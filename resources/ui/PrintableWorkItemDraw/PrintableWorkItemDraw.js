@@ -12,7 +12,9 @@ define(["dojo/_base/declare"], function (declare) {
 		globalChildrenToBeLoaded: 0,
 		globalChildCheckingDone: false,
 		dynamicVariableCounter: [],
+		toggleApplyHideSet: null,
 		_pageSizeOptimize: null,
+		_months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 		GLOBAL_HTML_ALLOWED_TAGS: "<b><i><u><p><br><a><s><div><span><hr><synthetic><ul><li><ol><svg><g><path>",
 		constructor: function constructor(parentWidget) {
 			this.parentWidget = parentWidget;
@@ -37,6 +39,7 @@ define(["dojo/_base/declare"], function (declare) {
 			this.globalChildrenLoaded = 0;
 			this.globalChildrenToBeLoaded = 0;
 			this.globalChildCheckingDone = false;
+			this.toggleApplyHideSet = new Set();
 			this.predefinedAttributes = !_predefinedAttributes ? [] : _predefinedAttributes;
 
 			if (!skipWebKeysIfNotEmpty || skipWebKeysIfNotEmpty && this.keyValueMap.length === 0) {
@@ -72,8 +75,12 @@ define(["dojo/_base/declare"], function (declare) {
 
 				if (this.dynamicHeightList.length != 0 && !this.ignoreDynamicValues) {
 					this._applyDynamicHeights(updateTitle, configuration);
-				} else if (updateTitle) {
-					this.parentWidget._updateTitle();
+				} else {
+					if (updateTitle) {
+						this.parentWidget._updateTitle();
+					}
+
+					this.onFinishedDrawing();
 				}
 			}
 		},
@@ -872,7 +879,7 @@ define(["dojo/_base/declare"], function (declare) {
 					if (hidden) {
 						previousValue.toggle.split(',').forEach(function (id) {
 							if (Number(id) != NaN) {
-								self._setRegionVisibilityByID(id, false);
+								self.toggleApplyHideSet.add(id);
 							}
 						});
 					}
@@ -946,10 +953,14 @@ define(["dojo/_base/declare"], function (declare) {
 			returnValue = returnValue.replace(/h/gm, dateValue.getHours());
 			returnValue = returnValue.replace(/dd/gm, "".concat(dateValue.getDate() < 10 ? "0" : "").concat(dateValue.getDate()));
 			returnValue = returnValue.replace(/d/gm, dateValue.getDate());
+			returnValue = returnValue.replace(/mmmm/gm, '%____%');
+			returnValue = returnValue.replace(/mmm/gm, '%___%');
 			returnValue = returnValue.replace(/mm/gm, "".concat(dateValue.getMonth() < 9 ? "0" : "").concat(dateValue.getMonth() + 1));
 			returnValue = returnValue.replace(/m/gm, dateValue.getMonth() + 1);
 			returnValue = returnValue.replace(/yyyy/gm, "".concat(dateValue.getFullYear()));
 			returnValue = returnValue.replace(/yy/gm, "".concat(String(dateValue.getFullYear()).slice(2)));
+			returnValue = returnValue.replace(/%____%/gm, this._months[dateValue.getMonth()]);
+			returnValue = returnValue.replace(/%___%/gm, this._months[dateValue.getMonth()].substr(0, 3));
 			return returnValue;
 		},
 		_formateLink: function _formateLink(keyWordContent, formatter) {
@@ -1279,6 +1290,13 @@ define(["dojo/_base/declare"], function (declare) {
 				console.error(e);
 				this.parentWidget.updateTitle();
 			}
+		},
+		onFinishedDrawing: function onFinishedDrawing() {
+			var _this9 = this;
+
+			this.toggleApplyHideSet.forEach(function (toggleID) {
+				return _this9._setRegionVisibilityByID(toggleID, false);
+			});
 		}
 	});
 });
