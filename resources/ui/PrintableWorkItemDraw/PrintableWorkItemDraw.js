@@ -299,6 +299,12 @@ define(["dojo/_base/declare"], function (declare) {
 			this._addPredefinedKeyValue('current.date.l.time', currentDate.toTimeString());
 
 			this._addPredefinedKeyValue('current.date.l.date', currentDate.toDateString());
+
+			var workitemURL = "".concat(this.parentWidget.webURL, "/resource/itemName/com.ibm.team.workitem.WorkItem/").concat(this._checkRegexAndTranslate('{{id}}'));
+
+			this._addPredefinedKeyValue('current.workitem.url', workitemURL);
+
+			this._addPredefinedKeyValue('current.workitem.linked_summary', "<a target=\"_blank\" href=\"".concat(workitemURL, ")\">").concat(this._checkRegexAndTranslate('{{summary}}'), "</a>"));
 		},
 		_addPredefinedKeyValue: function _addPredefinedKeyValue(key, value) {
 			this.predefinedAttributes.push({
@@ -894,6 +900,36 @@ define(["dojo/_base/declare"], function (declare) {
 						}
 					}
 				});
+			} else if (previousValue.type === "linkRegionAttribute" && previousValue.location) {
+				this.taskScheduler.push(function () {
+					var contentHolderElement = _this7.parentWidget.getHolderElement().querySelector('[regionID="' + regionID + '"] > .textHolder > .textContainer');
+
+					if (!contentHolderElement) {
+						return;
+					}
+
+					contentHolderElement.setAttribute('href', _this7._checkRegexAndTranslate("{{".concat(previousValue.location, "}}")));
+
+					if (previousValue.cursor) {
+						contentHolderElement.style.cursor = previousValue.cursor;
+					}
+
+					contentHolderElement.addEventListener('click', function (event) {
+						for (var i = 0; i < event.path.length; i++) {
+							var pathElement = event.path[i];
+
+							if (pathElement.classList.contains('textContainer')) {
+								var openURL = pathElement.getAttribute('href');
+
+								if (openURL) {
+									window.open(openURL, '_blank');
+								}
+
+								return;
+							}
+						}
+					});
+				});
 			}
 		},
 		_setRegionVisibilityByID: function _setRegionVisibilityByID(region, isVisible) {
@@ -964,7 +1000,7 @@ define(["dojo/_base/declare"], function (declare) {
 			return returnValue;
 		},
 		_formateLink: function _formateLink(keyWordContent, formatter) {
-			return "<a href=\"".concat(keyWordContent, "\" target=\"_blank\" rel=\"noopener noreferrer\">").concat(formatter, "</a>");
+			return "<a href=\"".concat(keyWordContent ? keyWordContent : formatter, "\" target=\"_blank\" rel=\"noopener noreferrer\">").concat(formatter, "</a>");
 		},
 		_getValueFromXML: function _getValueFromXML(xmlDocument, xmlValue, allowEmptyReturn, command) {
 			if (Boolean(command)) {
@@ -991,7 +1027,8 @@ define(["dojo/_base/declare"], function (declare) {
 					var _elementLinkNodeLength = Number(elementLinkNode.querySelector("length").textContent);
 
 					var _elementLinkNodeWebUri = elementLinkNode.querySelector("weburi").textContent;
-					_returnValue = _returnValue.substring(0, _elementLinkNodeOffset) + "<a href='" + _elementLinkNodeWebUri + "' target='_blank' rel='noopener noreferrer'>" + _returnValue.substring(_elementLinkNodeOffset, _elementLinkNodeOffset + _elementLinkNodeLength) + "</a>" + _returnValue.substring(_elementLinkNodeOffset + _elementLinkNodeLength);
+					var _elementLinkNodeUri = elementLinkNode.querySelector("uri").textContent;
+					_returnValue = _returnValue.substring(0, _elementLinkNodeOffset) + "<a href='" + (_elementLinkNodeWebUri ? _elementLinkNodeWebUri : _elementLinkNodeUri) + "' target='_blank' rel='noopener noreferrer'>" + _returnValue.substring(_elementLinkNodeOffset, _elementLinkNodeOffset + _elementLinkNodeLength) + "</a>" + _returnValue.substring(_elementLinkNodeOffset + _elementLinkNodeLength);
 				});
 
 				return _returnValue;
