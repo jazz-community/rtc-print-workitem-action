@@ -4,16 +4,10 @@
 	"description": "Print Work Item with the Local Client",
 	"main": "./resources/ui/PrintWorkItem.js",
 	"devDependencies": {
-		"@actions/core": "^1.2.4",
-		"disable-output-webpack-plugin": "^1.0.1",
-		"jazz-update-site-webpack-plugin": "^0.4.1",
-		"moment": "^2.22.2",
-		"remove-files-webpack-plugin": "^1.0.0",
-		"webpack": "^4.16.2",
-		"webpack-cli": "^3.1.0"
+		"@jazz-community-org/pack-jazz-web-plugin": "^2.0.2"
 	},
 	"scripts": {
-		"build": "webpack --config ./webpack.config.js --mode production"
+		"pack": "pack-jazz-web-plugin"
 	},
 	"keywords": [
 		"Jazz",
@@ -22,5 +16,8 @@
 		"Print"
 	],
 	"author": "David Segura, Siemens AG",
-	"license": "MIT"
+	"license": "MIT",
+	"packJazzWebPlugin": {
+		"pluginId": "com.siemens.bt.jazz.workitemeditor.rtcPrintWorkItemAction"
+	}
 }

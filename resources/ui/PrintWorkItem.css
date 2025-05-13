@@ -55,6 +55,10 @@
 /* PrintableWorkItemDraw - CSS  */
 /**********************************************************************************************************************/
 
+/* ====================== */
+/* New CSS Values for GUI */
+/* ====================== */
+
 table.workitemTable {
 	border-collapse: collapse;
 	table-layout: fixed;
@@ -66,7 +70,7 @@ table.workitemTable.border {
 	border: 1px solid black;
 }
 
-.workitemTable td {
+.workitemTable > tr > td {
 	width: 15px;
 	height: 15px;
 	border-collapse: collapse;
@@ -74,12 +78,11 @@ table.workitemTable.border {
 	text-align: center;
 }
 
-/* New CSS Values for GUI */
-
 /* Force the Browser to render the background-color when printing */
 .workitemTable {
+	print-color-adjust: exact !important;			/* Firefox */
 	-webkit-print-color-adjust: exact !important;	/* Chrome, Safari */
-	color-adjust: exact !important;					/* Firefox */
+	color-adjust: exact !important;					/* Firefox (Legacy) */
 }
 
 .workitemTable td .textHolder {
@@ -107,6 +110,30 @@ table.workitemTable.border {
 	font-weight: bold;
 }
 
+.workitemTable td .textHolder .textContainer .textDisplay table {
+	border-spacing: 0px;
+}
+
+.workitemTable td .textHolder .textContainer .textDisplay > table > *:is(thead, tbody) > tr > th {
+	font-weight: bold;
+	text-align: center;
+}
+
+.workitemTable td .textHolder .textContainer .textDisplay > table > *:is(thead, tbody) > tr > *:is(td, th) {
+	padding: 3px 4px;
+}
+
+.workitemTable td .textHolder .textContainer .textDisplay img {
+	max-width: 100%;
+}
+
+.workitemTable td .textDisplay.wiki-text pre {
+	white-space: pre-wrap;
+}
+
+table.configuratorUI {
+	width: 100%;
+}
 
 .rightPosition {
 	float: right;
@@ -116,10 +143,42 @@ table.workitemTable.border {
 	width: 100%;
 }
 
+.swal-footer {
+	background-color: rgb(245, 248, 250);
+	margin-top: 32px;
+	border-top: 1px solid #E9EEF1;
+	overflow: hidden;
+  }
+
+.trim-save-button {
+	display: inline-block;
+	max-width: 16px;
+	height: 16px;
+	vertical-align: middle;
+}
+
 .truncate {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.queryElement {
+	width: 100%;
+}
+
+.queryElement:hover {
+	cursor: pointer;
+	background-color: #dddddd;
+	border: 1px solid black;
+}
+
+.queryElement > input[type="checkbox"] {
+	cursor: pointer;
+}
+
+.swal-modal > .swal-content > table > tr.planModeSelectOption:hover {
+	background: #e9e9e9;
 }
 
 .pointer {
@@ -138,7 +197,7 @@ table.workitemTable.border {
 	transform: rotateZ(90deg);
 }
 
-div.printWorkItemModal .blink {
+div[dojoattachpoint="_contentWrapper"] .blink {
 	animation: blink-animation 1.5s steps(5, start) infinite;
 	-webkit-animation: blink-animation 1.5s steps(5, start) infinite;
 }
